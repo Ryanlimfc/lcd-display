@@ -5,6 +5,7 @@ import time
 import rospy
 from std_msgs.msg import String
 
+
 # Define some device parameters
 I2C_ADDR  = 0x27 # I2C device address
 LCD_WIDTH = 16   # Maximum characters per line
@@ -76,28 +77,33 @@ def lcd_string(message,line):
     for i in range(LCD_WIDTH):
         lcd_byte(ord(message[i]),LCD_CHR)
 
-def callback(#speed#):
-    rospy.loginfo("%s", #speed)#
+velocity = None
+
+def callback(speed):
+    global velocity
+    velocity = speed
 
 def listener():
     rospy.init_node('LCD Display', anonymous=True)
-
     rospy.Subscriber("Speed", String, callback)
-
     rospy.spin()
 
 def main():
   # Main program block
-
+    global velocity
+    start_time = time.perf_counter()
+    velocity = 0
   # Initialise display
     lcd_init()
-
-    while True:
-        listener()
+    listener()
     
+    while True:
+        timer = time.perf_counter() - start_time
+        seconds = timer % 60
+        minutes = timer//60
         # Send some test
-        lcd_string("Speed         <",LCD_LINE_1)
-        lcd_string("Timer        <",LCD_LINE_2)
+        lcd_string(f"Speed: {velocity:.2f}",LCD_LINE_1)
+        lcd_string(f"Timer: {minutes}:{seconds}",LCD_LINE_2)
 
         time.sleep(3)
 
